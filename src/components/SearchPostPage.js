@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import PostCard from "./PostCard";
 
-const QueryPostPage = () => {
+const SearchPostPage = () => {
     const location = useLocation();
     const q = new URLSearchParams(location.search).get('q');
 
@@ -39,4 +39,4 @@ const QueryPostPage = () => {
     );
 };
 
-export default QueryPostPage;
+export default SearchPostPage;

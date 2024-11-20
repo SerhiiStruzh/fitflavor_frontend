@@ -6,8 +6,9 @@ import ProfilePage from "./components/ProfilePage";
 import ProfileEditPage from "./components/ProfileEditPage";
 import PostEditor from "./components/PostEditPage";
 import PostView from "./components/PostView";
+import SearchPostPage from "./components/SearchPostPage";
+import CommentPage from "./components/CommentsPage";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import QueryPostPage from "./components/QueryPostPage";
 
 function App() {
   return (
@@ -17,8 +18,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/posts" element={<PostPage />}/>
-            <Route path="/posts/search" element={<QueryPostPage />}/>
+            <Route path="/comments/:postId" element={<CommentPage/>} />
             <Route path="/users/:userId" element={<ProfilePage />}/>
             <Route path="/users/:userId/edit" element={<ProfileEditPage />}/>
             <Route path="/posts/create" element={<PostEditor />}/>
@@ -31,6 +31,8 @@ function App() {
                   ![Паста карбонара](https://fps.cdnpk.net/images/home/subhome-ai.webp?w=649&h=649)`}
             />}/>
           </Routes>
+          <Route path="/posts" element={<PostPage />}/>
+          <Route path="/posts/search" element={<SearchPostPage />}/>
         </Router>
       </Layout>
     </div>
