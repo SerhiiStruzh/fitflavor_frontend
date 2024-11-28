@@ -28,11 +28,11 @@ function App() {
                   comments={15}
                   title="Смачний рецепт"
                   content={`**Інгредієнти:**
-                  ![Паста карбонара](https://fps.cdnpk.net/images/home/subhome-ai.webp?w=649&h=649)`}
+                  ![Паста карбонара](D:\\web\\flitflavor-backend\\sources\\2e10b9fcffffb39d4bf93f35be340d0105.png)`}
             />}/>
+            <Route path="/posts" element={<PostPage />}/>
+            <Route path="/posts/search" element={<SearchPostPage />}/>
           </Routes>
-          <Route path="/posts" element={<PostPage />}/>
-          <Route path="/posts/search" element={<SearchPostPage />}/>
         </Router>
       </Layout>
     </div>

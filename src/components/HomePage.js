@@ -2,6 +2,7 @@ import mainImage from '../assets/home_page_main_image.png'
 import postImage from '../assets/post.png'
 import recipesImage from '../assets/recepies.png'
 import comunityImage from '../assets/comunity.png'
+import { useError } from './ErrorContext';
 
 function HomePage() {
     return (
