@@ -1,32 +1,63 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { Comment } from './Comment';
+import { useParams } from 'react-router-dom';
+import { createComment, deleteComment, getCommentsByPost } from '../api/commentApi';
+import { useError } from './ErrorContext';
 
 const CommentPage = () => {
+  const { postId } = useParams();
   const [commentText, setCommentText] = useState('');
+  const [comments, setComments] = useState([]);
+  const { showError } = useError();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+
+    const fetchComments = async () => {
+      try {
+        const fetchedComments = await getCommentsByPost(postId);
+        setComments(fetchedComments);
+      } catch (err) {
+        showError(err.response?.data.message || "Failed to fetch comments.");
+        const errorMessage = Array.isArray(err.response?.data.message)
+        ? err.response.data.message[0] 
+        : err.response?.data.message || "Failed to fetch comments.";
+      }
+    };
+
+    if (postId) {
+      fetchComments();
+    }
+  }, [postId]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(commentText);
-    setCommentText('');
+    setCommentText((val) => val.trim())
+
+    try {
+      const newComment = await createComment(+postId, commentText);
+      setComments((prevComments) => [newComment, ...prevComments]);
+      setCommentText('');
+    } catch (err) {
+
+      const errorMessage = Array.isArray(err.response?.data.message)
+        ? err.response.data.message[0] 
+        : err.response?.data.message || "Failed to create comment.";
+
+      showError(errorMessage);
+    }
   };
 
-  const comments = [
-    {
-      id: 1,
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec pretium.',
-      username: 'username',
-      likes: 100,
-      isAuthor: true
-    },
-    {
-      id: 2,
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec pretium.',
-      username: 'username',
-      likes: 100,
-      isAuthor: false
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await deleteComment(commentId);
+      setComments((prevComments) => prevComments.filter((comment) => comment.id !== commentId));
+    } catch (err) {
+      const errorMessage = Array.isArray(err.response?.data.message)
+        ? err.response.data.message[0] 
+        : err.response?.data.message || "Failed to delete comment.";
+      showError(errorMessage);
     }
-  ];
+  };
 
   return (
       <main className="max-w-2xl mx-auto px-4 py-8">
@@ -59,11 +90,15 @@ const CommentPage = () => {
           <div className="space-y-4">
             {comments.map((comment) => (
               <Comment
-                content={comment.content}
-                username={comment.username}
-                likes={comment.likes}
+                key={comment.id}
+                id={comment.id}
+                commentText={comment.commentText}
+                username={comment.userName}
                 isAuthor={comment.isAuthor}
-              />
+                authorUserId={comment.userId}
+                authorPicture={comment.authorPicture}
+                onDelete={handleDeleteComment}
+            />
             ))}
           </div>
         </div>

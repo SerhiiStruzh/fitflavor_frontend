@@ -1,47 +1,107 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import likeImg from '../assets/like.svg';
+import likedLikeImg from '../assets/like-liked.svg';
 import commentImg from '../assets/comment.svg';
 import profileDefaultImg from '../assets/profile_img.svg';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useError } from './ErrorContext';
+import { getPostById } from '../api/postApi';
+import Loading from './Loading';
+import { createLike, deleteLike } from '../api/likeApi';
 
-const PostView = ({ content, username, likes, comments, title }) => {
+const PostView = () => {
+  const navigate = useNavigate();
+  const { postId } = useParams();
+  const { showError } = useError();
+  const [post, setPost] = useState(null); 
+  const [loading, setLoading] = useState(true);  
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const data = await getPostById(postId);
+        setPost(data); 
+        setLoading(false); 
+      } catch (err) {
+        showError(err.response?.data.message || "Failed to fetch post."); 
+        setLoading(false);
+        navigate(`/`)
+      }
+    };
+
+    fetchPost(); 
+  }, [postId]);  
+
+  const handleAuthorRedirect = () => {
+    navigate(`/users/${post.userId}`)
+  }
+
+  const handleLike = async (e) => {
+    try {
+        let likeCount;
+        if (post.isLiked) {
+            await deleteLike(+postId);
+            likeCount = post.likesAmount - 1;
+        } else {
+            await createLike(+postId);
+            likeCount = post.likesAmount + 1;
+        }
+        setPost((prev) => ({
+          ...prev,
+          isLiked: !prev.isLiked,
+          likesAmount: likeCount
+        }))
+    } catch (err) {
+        showError(err.response?.data.message || "Failed to update like.");
+    }
+  };
+
+  if(loading){
+    return(
+      <Loading></Loading>
+    )
+  }
+
   return (
     <div>
       <div className="max-w-2xl mx-auto my-8">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-6 space-x-4">
-            <div className="cursor-pointer flex items-center space-x-2">
+            <div className="cursor-pointer flex items-center space-x-2" onClick={handleAuthorRedirect}>
               <img
-                src={profileDefaultImg}
+                src={post.authorPicture || profileDefaultImg}
                 alt='profile'
-                className='w-4 h-4'
+                className='w-4 h-4 rounded-full'
               />
-              <span className="text-black text-sm font-kanit">{username}</span>
+              <span className="text-black text-sm font-kanit">{post.username}</span>
             </div>
 
-            <div className="cursor-pointer flex items-center space-x-1">
+            <div className="cursor-pointer flex items-center space-x-1" onClick={handleLike}>
               <img
-                src={likeImg}
+                src={post.isLiked ? likedLikeImg : likeImg}
                 alt='like'
                 className='w-4 h-4'
               />
-              <span className="text-black text-sm font-kanit">{likes}</span>
+              <span className="text-black text-sm font-kanit">{post.likesAmount}</span>
             </div>
 
-            <div className="cursor-pointer flex items-center space-x-1">
-              <img
-                src={commentImg}
-                alt='comments'
-                className='w-6 h-6'
-              />
-              <span className="text-black text-sm font-kanit">{comments}</span>
-            </div>
+            <Link to={`/comments/${postId}`}>
+              <div className="cursor-pointer flex items-center space-x-1">
+                <img
+                  src={commentImg}
+                  alt='comments'
+                  className='w-6 h-6'
+                />
+                <span className="text-black text-sm font-kanit">{post.commentsAmount}</span>
+              </div>
+              </Link>
           </div>
 
-          <h1 className="text-2xl text-center font-bold mb-4">{title}</h1>
+          <h1 className="text-2xl text-center font-bold mb-4">{post.title}</h1>
 
           <div className="prose max-w-none">
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown urlTransform={(uri) => {return uri}}>{post.body}</ReactMarkdown>
           </div>
         </div>
       </div>

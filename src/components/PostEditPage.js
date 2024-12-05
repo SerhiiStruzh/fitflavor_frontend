@@ -1,16 +1,26 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import imageImg from '../assets/image.svg';
+import TurndownService from 'turndown';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useError } from './ErrorContext';
+import { createPost, getPostById, updatePost } from '../api/postApi';
+import { marked } from 'marked';
 
 const PostEditor = () => {
+  const navigate = useNavigate();
+  const { postId } = useParams();
+  const { showError } = useError();
   const [title, setTitle] = useState('');
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       Image.configure({
+        allowBase64: true,
+        inline: true,
         HTMLAttributes: {
           class: 'post-image',
         },
@@ -23,6 +33,24 @@ const PostEditor = () => {
       },
     },
   });
+
+  useEffect(() => {
+    const fetchPostData = async () => {
+      if (!postId) return;
+
+      try {
+        const post = await getPostById(postId); 
+        setTitle(post.title);
+        editor?.commands.setContent(marked(post.body));
+      } catch (err) {
+        showError(err.response?.data.message || 'Failed to load the post.');
+        navigate('/');
+      }
+    };
+
+    fetchPostData();
+  }, [postId]);
+
 
   const toggleBold = useCallback(() => {
     if (editor) {
@@ -63,13 +91,29 @@ const PostEditor = () => {
     input.click();
   }, [editor]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const postData = {
-      title,
-      content: editor?.getHTML()
-    };
-    console.log('Post Data:', postData);
+
+    const turndownService = new TurndownService();
+    const htmlContent = editor?.getHTML();
+    const body = turndownService.turndown(htmlContent);
+
+    try {
+      let newPostId;
+      if(postId === undefined) {
+        newPostId = await createPost(title, body);
+      } else {
+        newPostId = await updatePost(postId, title, body);
+      }
+      navigate(`/posts/${newPostId}`)
+    } catch (err) {
+     
+      const errorMessage = Array.isArray(err.response?.data.message)
+        ? err.response.data.message[0] 
+        : err.response?.data.message || "Failed to create post.";
+    
+      showError(errorMessage);
+    }
   };
 
   return (

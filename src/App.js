@@ -21,18 +21,10 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/comments/:postId" element={<CommentPage />} />
             <Route path="/users/:userId" element={<ProfilePage />} />
-            <Route path="/users/:userId/edit" element={<ProfileEditPage />} />
+            <Route path="/users/edit/:userId" element={<ProfileEditPage />} />
             <Route path="/posts/create" element={<PostEditor />} />
-            <Route 
-              path="/posts/:postId" 
-              element={<PostView 
-                username="JohnDoe"
-                likes={42}
-                comments={15}
-                title="Смачний рецепт"
-                content={`**Інгредієнти:**`}
-              />}
-            />
+            <Route path="/posts/edit/:postId" element={<PostEditor />} />
+            <Route path="/posts/:postId" element={<PostView />}/>
             <Route path="/posts" element={<PostPage />} />
             <Route path="/posts/search" element={<SearchPostPage />} />
             <Route path="/auth/google" element={<GoogleAuthRedirect />} />
